@@ -79,3 +79,4 @@ db/*.sqlite3
 # cPanel deployment artifacts
 /.cpanel.yml
 /cpanel-deploy/
+/cpanel-deploy.zip
