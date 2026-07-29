@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SolarModule {
+  id                  String   @id @default(cuid())
+  moduleSn            String   @unique
+  moduleType          String
+  power               String
+  moduleGrade         String
+  endMarketCountry    String
+  customerDesc        String?
+  productionDate      String?
+  actualMovementDate  String?
+  verifyCode          String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  queryLogs           QueryLog[]
+}
+
+model QueryLog {
+  id              String   @id @default(cuid())
+  moduleSn        String
+  queryTime       DateTime @default(now())
+  queryNumber     Int
+  ipAddress       String?
+  userAgent       String?
+  result          String   @default("success")
+  moduleId        String?
+  module          SolarModule? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+}
+
+model CaptchaStore {
+  id        String   @id @default(cuid())
+  uuid      String   @unique
+  code      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
