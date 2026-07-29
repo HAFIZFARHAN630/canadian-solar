@@ -87,24 +87,48 @@ cpanel-deploy/
 
 ## 4. Initialize the database
 
-The app uses Prisma + SQLite. After the first deploy, you must create
-the schema and a default admin user.
+The app uses Prisma + SQLite. After the first deploy you must do **two** steps,
+in this order, or `/api/seed` will return HTTP 500:
+
+1. **Create the schema** (creates all tables in the SQLite file) — required once.
+2. **Seed sample data + default admin** (creates the `admin / admin123` user,
+   12 sample solar modules, query logs, and default site settings).
 
 ### Option A — via SSH (preferred)
+
+Run from the project root (`/home/USERNAME/canadian-solar`):
+
 ```bash
 cd /home/USERNAME/canadian-solar
+
+# Step 1 — create tables (REQUIRED, do not skip)
 node node_modules/prisma/build/index.js db push
-# Then visit https://canadian-solar.yourdomain.com/api/seed
-# to seed sample data, or use the admin panel's "Seed" button.
+
+# Step 2 — seed sample data + default admin
+#   Either hit the endpoint:
+curl -X POST https://canadian-solar.yourdomain.com/api/seed
+#   Or click the "Seed Database" button inside the admin panel.
 ```
 
-### Option B — via the browser
-The app exposes a one-time seed endpoint:
+### Option B — via the browser (only if SSH is unavailable)
+
+> ⚠️ The seed endpoint **requires the schema to already exist**.
+> Prisma does NOT auto-create tables on first query.
+> If you cannot run `prisma db push` via SSH, ask your host to run it for you,
+> or use the cPanel "Run NPM Script" / Terminal feature to run:
+> `node node_modules/prisma/build/index.js db push`
+
+Once the schema exists, seed via:
 ```
-GET https://canadian-solar.yourdomain.com/api/seed
+POST https://canadian-solar.yourdomain.com/api/seed
 ```
-This creates the SQLite tables (via Prisma's auto-push on first query)
-and inserts 12 sample solar modules.
+(Method is **POST**, not GET — a GET will return HTTP 405.)
+
+### Verify it worked
+- Visit `https://canadian-solar.yourdomain.com/` — homepage should load.
+- Visit `https://canadian-solar.yourdomain.com/admin` — login page.
+- Login with `admin` / `admin123` — should succeed.
+- **Change the admin password immediately after first login.**
 
 > **Security**: After seeding, remove or protect the `/api/seed` route
 > if you don't want it accessible publicly.
